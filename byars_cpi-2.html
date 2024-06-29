@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Cross-Program Invocations (CPIs) in Solana</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px;
+            align-items: flex-start;
+        }
+        
+        .table-of-contents ul {
+            list-style-type: none;
+        padding: 0;
+    }
+    .table-of-contents li {
+        margin-bottom: 10px;
+    }
+    .blog-content {
+        flex: 1;
+        padding: 0px;
+        overflow-y: auto;
+    }
+        .sidebar {
+            width: 250px;
+            padding: 0;
+            position: sticky;
+            top: 50px;
+            
+        }
+        .logo {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 0px;
+        }
+        .toc {
+            width: 25%;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            background-color: #f8f8f8;
+            padding: 20px;
+            border-radius: 5px;
+            margin-right: 20px;
+        }
+        .toc h2 {
+            font-size: 1.2em;
+            margin-top: 0;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc ul li {
+            margin-bottom: 10px;
+        }
+        .toc ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+        .toc ul li a:hover {
+            color: #0066cc;
+        }
+        .content {
+            width: 75%;
+            padding-left: 50px;
+        }
+        .content h1 {
+            font-size: 2em;
+            margin-top: 0;
+        }
+        .content h2 {
+            font-size: 1.5em;
+            margin-top: 30px;
+        }
+        .content p {
+            margin-bottom: 20px;
+        }
+        .content ul, .content ol {
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+        .content img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .toc, .content {
+                width: 100%;
+            }
+            .toc {
+                position: static;
+                margin-bottom: 20px;
+            }
+        }
+
+        figure {
+            border: thin #c0c0c0 solid;
+            display: flex;
+            flex-flow: column;
+            padding: 5px;
+            margin: auto;
+          }
+         
+          
+          figcaption {
+            background-color: #222;
+            color: #fff;
+            font: italic smaller sans-serif;
+            padding: 3px;
+            text-align: center;
+          }
+          
+    </style>
+</head>
+<body>
+    <div class="container">
+       
+        <aside class="sidebar">
+                <img src="syndicaCircle.jpg" alt="Syndica Logo" class="logo">
+                <p><b>Syndica</b><br>30 June 2024</p>
+            <nav class="table-of-contents">
+            <h2>Table of Contents</h2>
+            <ul>
+                <li><a href="#what-are-cross-program-invocations">What are Cross-Program Invocations?</a></li>
+                <li><a href="#why-should-you-use-cpis">Why should you use CPIs?</a></li>
+                <li><a href="#constructing-and-using-cpis">Constructing and Using CPIs</a></li>
+                <li><a href="#using-cpis-with-the-invoke-function">Using CPIs With the <code>invoke</code> Function</a></li>
+                <li><a href="#using-cpis-with-the-invoke_signed-function">Using CPIs With the <code>invoke_signed</code> Function</a></li>
+                <li><a href="#employing-best-practices-and-troubleshooting-cpis">Employing Best Practices and Troubleshooting CPIs</a></li>
+                <li><a href="#additional-resources">Additional Resources</a></li>
+                
+            </ul>
+        </nav>
+        </aside>
+        <main class="content">
+            <p style="color: blue; font-size: 12px;">Engineering</p>
+            <h1>What is a cross-program invocation (CPI) and why should you use it in your Solana program?</h1>
+            <img src="CPI.jpg" alt="CPI concept illustrating connection points">
+            <section id="what-are-cross-program-invocations">
+                <h2>What are cross-program invocations?</h2>
+                <p>Cross-program invocations (CPIs) enable one program to call another program directly on the Solana blockchain and to invoke 
+                    instructions of the called program during execution. By combining the functionalities of multiple programs, CPIs enable you to 
+                    create complex and powerful applications.</p>
+            </section>
+            
+            <section id="why-should-you-use-cpis">
+                <h2>Why should you use CPIs?</h2>
+                <p>CPIs are a core feature of Solana's programming model and are integral to the Solana architecture. CPIs offer the following benefits:</p>
+                <ul>
+                    <li><b>Composability:</b> CPIs enable you to combine the functionality of multiple programs.</li>
+                    <li><b>Reusability:</b> CPIs limit repetition by enabling you to call programs with additional features.</li>
+                    <li><b>Atomic transactions:</b> CPIs enable multiple program interactions to occur within a single transaction and ensure that 
+                        operations either all succeed or all fail.</li>
+                    <li><b>Security:</b> CPIs enable you to leverage the security and auditing of external programs and free you from reimplementing 
+                        sensitive operations.</li>
+                    <li><b>Ecosystem integration:</b> CPIs enable your programs to integrate with the broader Solana ecosystem, such as token programs 
+                        or governance systems.</li>
+                    <li><b>Efficiency:</b> CPIs occur within a single transaction and don't require multiple calls.</li>
+                    <li><b>Upgradability:</b> CPIs enable your programs to interact with upgradeable programs, which can facilitate benefits from 
+                        improvements or new features without changing your own code.</li>
+                </ul>
+            </section>
+            
+            <section id="constructing-and-using-cpis">
+                <h2>Constructing and Using CPIs</h2>
+                <p>You can execute CPIs using the <code>invoke</code> or the <code>invoke_signed</code> function (both located in the <code>solana_program</code> 
+                    crate). When using CPIs to invoke a second program, the called program can make further CPIs to other programs, up to a maximum depth of 4.</p>
+            </section>
+            
+            <section id="using-cpis-with-the-invoke-function">
+                <h2>Using CPIs With the <code>invoke</code> Function</h2>
+                <p>You use the <code>invoke</code> function when you want to call another program and when all required signers are accessible prior to 
+                    invocation (and you are not required to sign for a Program Derived Address in the CPI). For example, you would use this method if you 
+                    were invoking a program to transfer tokens between accounts that are owned by a single user.</p>
+                <table>
+                    <tr>
+                        <th>Signature</th>
+                        <td>Uses signatures provided in the transaction</td>
+                    </tr>
+                    <tr>
+                        <th>Parameters</th>
+                        <td><code>instruction</code><br><code>account</code></td>
+                    </tr>
+                    <tr>
+                        <th>Authority</th>
+                        <td>Cannot sign for PDAs</td>
+                    </tr>
+                </table>
+                <p>To use CPIs with the <code>invoke</code> function:</p>
+                
+                <ol>
+                    <li>Import all necessary modules.</li>
+                    <li>Prepare the accounts:
+                        <ul>
+                            <li>Identify all accounts that will be involved in the CPI.</li>
+                            <li>Ensure you have the necessary <code>AccountInfo</code> structures for all accounts in the CPI.</li>
+                            <li>See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-accountinfo">CPI <code>AccountInfo</code> documentation</a> 
+                                for more information.</li>
+                        </ul>
+                    </li>
+                    <li>Create the instruction. Construct an <code>Instruction</code> struct with:
+                        <ul>
+                            <li>A vector of <code>AccountMeta</code> structures representing the accounts.</li>
+                            <li>The instruction data as a vector of bytes.</li>
+                            <li>See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-instruction"> CPI <code>Instruction</code> 
+                                documentation</a> for more information.</li>
+                        </ul>
+                    </li>
+                    <li>Prepare the <code>account_infos</code>.<br>
+                        Create a slice of <code>AccountInfo</code> references for all accounts involved in the instruction. 
+                        See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-accountinfo"> CPI <code>AccountInfo</code> documentation</a> 
+                        for more information.
+                    </li>
+                    <li>Call <code>invoke</code>. <br>
+                        Use the <code>invoke</code> function to execute the CPI. 
+                        See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-with-invoke"> <code>invoke</code> documentation</a> 
+                        for more information.
+                    </li>
+                    <li>Handle the result.<br>
+                        The <code>invoke</code> function returns a <code>ProgramResult</code> and requires you to handle any potential errors. 
+                        See <a href="#employing-best-practices-and-troubleshooting-cpis">Employing Best Practices and Troubleshooting CPIs</a> 
+                        for more information. 
+                    </li>
+                </ol>
+
+<p>The following example (in rust) was generated by Claude 3.5 and demonstrates a CPI to the system program to transfer Solana native currency (SOL) from one account to another.</p>
+                <figure>
+                    <img src="invoke.png" alt="Using a CPI with the <code>invoke</code> function">
+                    <figcaption>Using a CPI with the <code>invoke</code> function</figcaption>
+                </figure>
+            </section>
+            
+            <section id="using-cpis-with-the-invoke_signed-function">
+                <h2>Using CPIs With the <code>invoke_signed</code> Function</h2>
+                <p>You use the <code>invoke_signed</code> function when you want to call another program and when your program is 
+                    required to sign for a Program Derived Address (PDA) that it controls (when you must demonstrate that your program has authority over a 
+                    specific PDA). For example, you would use this method if you were invoking a program to initialize a token account 
+                    owned by a PDA or if the program were signing a transaction on behalf of a PDA-controlled escrow.</p>
+                <table>
+                    <tr>
+                        <th>Signature</th>
+                        <td>Generates a signature for the PDA using the provided seeds</td>
+                    </tr>
+                    <tr>
+                        <th>Parameters</th>
+                        <td><code>instruction</code><br><code>account</code><br><code>seeds</code></td>
+                    </tr>
+                    <tr>
+                        <th>Authority</th>
+                        <td>Can sign for PDAs owned by the calling program</td>
+                    </tr>
+                </table>
+                <p>To use CPIs with the <code>invoke_signed</code> function:</p>
+                <ol>
+                    <li>Import all necessary modules.</li>
+                    <li>Prepare the accounts:
+                        <ul>
+                            <li>Identify all accounts that will be involved in the CPI.</li>
+                            <li>Ensure you have the necessary <code>AccountInfo</code> structures for all accounts in the CPI.</li>
+                            <li>See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-accountinfo">CPI <code>AccountInfo</code> documentation</a> 
+                                for more information.</li>
+                        </ul>
+                    </li>
+                    <li>Create the instruction. <br>Construct an <code>Instruction</code> struct with:
+                        <ul>
+                            <li>The program ID of the program invoked.</li>
+                            <li>A vector of <code>AccountMeta</code> structures representing the accounts.</li>
+                            <li>The instruction data as a vector of bytes.</li>
+                            <li>See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-instruction"> CPI <code>Instruction</code> 
+                                documentation</a> for more information.</li>
+                        </ul>
+                    </li>
+                    <li>Prepare the <code>account_infos</code>.<br>
+                        Create a slice of <code>AccountInfo</code> references for all accounts involved in the instruction. 
+                        See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-accountinfo"> CPI <code>AccountInfo</code> documentation</a> 
+                        for more information.
+                    </li>
+                    <li>Prepare the seeds for the PDA:<br>
+                        <ul>
+                            <li>Determine the seeds used to derive the PDA.</li>
+                            <li>Include the bump seed.</li>
+                            <li>See the <a href="https://solanacookbook.com/core-concepts/pdas.html">Program Derived Addresses 
+                                documentation</a> for more information. 
+                            </a></li>
+
+                        </ul>
+                    </li>
+                    <li>Call <code>invoke_signed</code>. <br>
+                        Use the <code>invoke_signed</code> function to execute the CPI. 
+                        See the <a href="https://solanacookbook.com/core-concepts/cpi.html#cpi-with-invoke-signed"> <code>invoke_signed</code> documentation</a> 
+                        for more information.
+                    </li>
+                    <li>Handle the result.<br>
+                        The <code>invoke_signed</code> function returns a <code>ProgramResult</code> and requires you to handle any potential errors.
+                        See <a href="#employing-best-practices-and-troubleshooting-cpis">Employing Best Practices and Troubleshooting CPIs</a> 
+                        for more information.
+                    </li>
+                </ol>
+                <p>The following example (in rust) was generated by Claude 3.5 and demonstrates a CPI to the System Program 
+                    to transfer Solana native currency (SOL) from a PDA-controlled account to another account.
+                </p>
+                <figure> 
+                    <img src="invoke_signed.png" alt="Using a CPI with the invoke_signed function">
+                    <figcaption>Using a CPI with the <code>invoke_signed</code> function</figcaption>
+                </figure>
+            </section>
+            
+            <section id="employing-best-practices-and-troubleshooting-cpis">
+                <h2>Employing Best Practices and Troubleshooting CPIs</h2>
+                <p>Consider the following best practices and troubleshooting tips when using CPIs with <code>invoke_signed</code> and <code>invoke</code> functions:</p>
+                <ul>
+                    <li>Ensure that all required accounts—especially program accounts—are included and in the correct order.</li>
+                    <li>Verify that accounts have the correct permissions and confirm the account ownership.</li>
+                    <li>When working with <code>invoke</code>, ensure that the necessary signers are included in the transaction.</li>
+                    <li>When working with <code>invoke_signed</code>, verify that the PDA seeds and bump seed are correct.</li>
+                    <li>Ensure that the instruction data format and content are correct.</li>
+                    <li>Ensure that the data serialization/deserialization is correct.</li>
+                    <li>Verify that you are calling the intended program ID.</li>
+                    <li>Use proper error handling to catch and identify specific issues.</li>
+                    <li>Implement logging for better visibility into the execution flow.</li>
+                    <li>Ensure that your program is compatible with the current Solana version.</li>
+                    <li>Ensure that you are not exceeding the compute unit consumption limit, especially if you are working with complex operations.</li>
+                    <li>Verify that account states are as expected before and after the CPI.</li>
+                    <li>Leverage Solana's error codes to solicit specific error information.</li>
+                    <li>Use <code>solana logs</code> or RPC calls to view detailed transaction logs.</li>
+                    <li>Simulate transactions to identify issues before sending them.</li>
+                </ul>
+            </section>
+            <section id="additional-resources">
+                <h2>Additional Resources</h2>
+                    <ul>
+                        <li>
+                            <a href="https://solanacookbook.com/core-concepts/cpi.html">The Solana Cookbook, Cross Program Invocations (CPIs)</a>
+                        </li>
+                        <li><a href="https://www.soldev.app/course/cpi">The Solana Development Course, Cross Program Invocations (CPIs)</a>
+                        </li>
+                    </ul>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
